@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>정선 노선이탈 챌린지</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+  }
+  body {
+    min-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #2A1B22;
+    color: #F4F1EC;
+  }
+
+  .header {
+    flex-shrink: 0;
+    padding: 18px 20px 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #AEB8A0;
+    margin-bottom: 6px;
+  }
+  .brandtitle {
+    font-size: clamp(22px, 7vw, 27px);
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: #FF5C34;
+    margin-bottom: 7px;
+    line-height: 1.15;
+  }
+  .purpose {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: rgba(244,241,236,0.62);
+    line-height: 1.5;
+    margin-bottom: 13px;
+  }
+  .purpose b { color: rgba(244,241,236,0.9); font-weight: 700; }
+
+  .progress { display: flex; gap: 4px; }
+  .seg { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden; }
+  .seg i { display: block; height: 100%; width: 0%; transition: width 0.25s, background 0.25s; }
+  .seg.done i, .seg.current i { width: 100%; }
+
+  .body-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .screen {
+    flex: 1; display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 22px 24px 30px 24px; text-align: center;
+  }
+  .screen.active { display: flex; animation: fadein 0.3s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  #intro .hero { font-weight: 800; font-size: clamp(26px, 8vw, 32px); line-height: 1.35; color: #F4F1EC; margin-bottom: 12px; }
+  #intro .hero .mark { color: #E9F056; }
+  #intro .sub2 { font-size: 14px; font-weight: 600; color: rgba(244,241,236,0.68); margin-bottom: 34px; line-height: 1.6; }
+  .btn-primary {
+    font-weight: 800; font-size: 17px; color: #2A1B22; background: #E9F056;
+    border: none; border-radius: 100px; padding: 17px 50px; cursor: pointer; transition: transform 0.1s;
+  }
+  .btn-primary:active { transform: scale(0.96); }
+
+  .qnum { font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-bottom: 16px; opacity: 0.5; }
+  .qtext { font-weight: 700; font-size: clamp(21px, 6.6vw, 25px); line-height: 1.5; letter-spacing: -0.3px; margin-bottom: 26px; color: #F4F1EC; }
+  .choices { display: flex; gap: 12px; width: 100%; max-width: 380px; margin-bottom: 18px; }
+  .choice-btn {
+    flex: 1; padding: 17px 0; font-weight: 800; font-size: 18px; border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.04);
+    color: #F4F1EC; cursor: pointer; transition: transform 0.08s, background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .choice-btn:active:not(:disabled) { transform: scale(0.95); }
+  .choice-btn.picked { color: #2A1B22; }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn:disabled:not(.picked) { opacity: 0.35; }
+
+  .reply {
+    background: rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 18px;
+    font-size: 14.5px; font-weight: 600; line-height: 1.65; color: rgba(244,241,236,0.94);
+    max-width: 380px; opacity: 0; transform: translateY(6px);
+    transition: opacity 0.28s, transform 0.28s; margin-bottom: 18px;
+    border-left: 3px solid #E9F056; text-align: left;
+  }
+  .reply.show { opacity: 1; transform: translateY(0); }
+
+  .btn-next {
+    font-weight: 800; font-size: 14px; background: transparent; color: #F4F1EC;
+    border: 2px solid rgba(255,255,255,0.3); border-radius: 100px; padding: 11px 28px;
+    cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .btn-next.show { opacity: 1; pointer-events: auto; }
+  .btn-next:active { transform: scale(0.95); }
+
+  #final .lead { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: rgba(244,241,236,0.5); margin-bottom: 16px; }
+  #final .converge { font-size: 15px; font-weight: 500; color: rgba(244,241,236,0.75); line-height: 1.8; margin-bottom: 24px; max-width: 320px; }
+  #final .converge b { color: #F4F1EC; font-weight: 800; }
+  #final .cta { font-weight: 900; font-size: clamp(38px, 12vw, 54px); line-height: 1.08; letter-spacing: -1px; color: #F4F1EC; margin-bottom: 30px; }
+  #final .cta .mark { color: #FF5C34; }
+  .btn-commit {
+    font-weight: 800; font-size: 18px; background: #FF5C34; color: #2A1B22;
+    border: none; border-radius: 100px; padding: 19px 20px; width: 100%; max-width: 340px;
+    cursor: pointer; transition: transform 0.1s;
+  }
+  .btn-commit:active { transform: scale(0.96); }
+
+  #done { background: #E9F056; }
+  #done .checkring {
+    width: 88px; height: 88px; border-radius: 50%; border: 3px solid #2A1B22;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px; font-weight: 900; color: #2A1B22; margin: 0 auto 24px auto;
+  }
+  #done h2 { font-weight: 900; font-size: 23px; letter-spacing: -0.5px; margin-bottom: 11px; color: #2A1B22; }
+  #done p { font-size: 14.5px; font-weight: 500; color: #3A3220; line-height: 1.6; margin-bottom: 26px; max-width: 300px; }
+  .btn-restart {
+    background: transparent; border: 2px solid #2A1B22; border-radius: 100px; padding: 12px 26px;
+    font-size: 13.5px; font-weight: 700; cursor: pointer; color: #2A1B22;
+  }
+  .btn-restart:active { transform: scale(0.96); }
+
+  .admin-link { position: fixed; bottom: 6px; right: 10px; font-size: 9px; color: rgba(255,255,255,0.15); z-index: 3; }
+  #adminPanel {
+    position: fixed; inset: 0; background: rgba(10,10,10,0.95); color: #fff; z-index: 10;
+    display: none; align-items: center; justify-content: center; padding: 30px;
+  }
+  #adminPanel.show { display: flex; }
+  #adminPanel .box { max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto; font-size: 13px; line-height: 1.9; }
+  #adminPanel h3 { font-size: 16px; font-weight: 800; margin-bottom: 12px; color: #E9F056; }
+  #adminPanel .close { margin-top: 16px; background: #E9F056; color: #2A1B22; border: none; border-radius: 10px; padding: 8px 20px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">YES, MATE 리서치 프로젝트</div>
+  <div class="brandtitle">정선 노선이탈 챌린지</div>
+  <div class="purpose">이 설문은 당신의 <b>계획형 여부를 자백</b>받고, 정선에서<br><b>진짜 노선이탈</b>할 사람을 색출하기 위한 조사입니다.</div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<div class="body-area" id="bodyArea">
+
+  <div class="screen active" id="intro">
+    <div class="hero">당신의 계획,<br>오늘 여기서<br><span class="mark">탈탈 털립니다</span></div>
+    <div class="sub2">웃음 참지 마세요, 그게 이 조사의 목적입니다.</div>
+    <button class="btn-primary" onclick="startQuiz()">자백하러 가기</button>
+  </div>
+
+  <div class="screen" id="question">
+    <div class="qnum" id="qnum">심문 1 / 10</div>
+    <div class="qtext" id="qtext"></div>
+    <div class="choices">
+      <button class="choice-btn yes" id="btnYes" onclick="pick('yes')">YES</button>
+      <button class="choice-btn no" id="btnNo" onclick="pick('no')">NO</button>
+    </div>
+    <div class="reply" id="reply"></div>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">다음 →</button>
+  </div>
+
+  <div class="screen" id="final">
+    <div class="lead">심문 종료</div>
+    <div class="converge">
+      10개의 증거, 다 모았습니다.<br>
+      계획형이든 즉흥형이든 결과는 같아요.<br><br>
+      <b>오늘 여기 서 있다는 것 자체가</b><br>이미 빼도 박도 못할 증거니까.
+    </div>
+    <div class="cta">까짓것,<br><span class="mark">가보자</span></div>
+    <button class="btn-commit" onclick="commit()">까짓것, 어차피 할 거 지금 할래</button>
+  </div>
+
+  <div class="screen" id="done">
+    <div class="checkring">✓</div>
+    <h2>자백 접수 완료</h2>
+    <p>이제 진짜 정선으로 압송됩니다.<br>스태프에게 도장 받고, 예스메이트 파일럿 신청 카드도 챙겨가세요.</p>
+    <button class="btn-restart" onclick="restart()">다음 용의자 부르기</button>
+  </div>
+
+</div>
+
+<div class="admin-link" onclick="showAdmin()">stats</div>
+<div id="adminPanel">
+  <div class="box">
+    <h3>실시간 응답 현황</h3>
+    <div id="statsBody"></div>
+    <button class="close" onclick="hideAdmin()">닫기</button>
+  </div>
+</div>
+
+<script>
+const accents = ['#FF5C34', '#E9F056', '#AEB8A0', '#D7EFFF'];
+
+const questions = [
+  { q: "여행 캐리어, 출발 3일 전부터 이미 다 싸놨다.",
+    yes: "근데 그 캐리어 옆에 \"혹시 몰라서\" 산 여행용 파우치, 아직 택도 안 뜯으셨죠?",
+    no: "그럼 출발 당일 아침 7시에 캐리어 위에 앉아서 지퍼 닫아본 적은 있으시고요?" },
+  { q: "캘린더 앱에 이동시간까지 분 단위로 박아놓는다.",
+    yes: "캘린더 알림, 10분 전·5분 전·지금 이렇게 3단계로 설정해두셨죠? 그중 하나는 매번 무시하고 계시고요.",
+    no: "그럼 지금 이 설문, 몇 분째 하고 계신지 시간 안 재보셨어요? ...재보셨네." },
+  { q: "여행 전날, 혹시 몰라 플랜 B, C까지 준비해둔다.",
+    yes: "네이버 지도 즐겨찾기에 \"혹시 몰라 저장\" 폴더 있으시죠? 거기 40개쯤 쌓여있고 한 번도 안 가보셨을걸요.",
+    no: "플랜이 없다면서, 숙소 취소 정책은 왜 이미 확인해두셨어요?" },
+  { q: "\"저녁 뭐 먹지\"라고 물어놓고 사실 후보 3개는 이미 정해뒀다.",
+    yes: "배달앱 즐겨찾기 스크롤하면 최소 15개 나오죠? 근데 결국 시키는 건 늘 그 3개 중 하나고요.",
+    no: "즉석에서 정하신다면서, 배달앱엔 왜 \"나중에 시킬 것\" 폴더가 따로 있으세요?" },
+  { q: "누가 갑자기 일정 바꾸자고 하면 표정 관리가 1초 늦게 된다.",
+    yes: "그 표정, 단톡방에서 이모티콘으로 무마해보신 적 있으시죠? \"ㅋㅋㅋ좋아요\" 치고 뒤에서 일정표 다시 짜신 거.",
+    no: "표정 안 흔들리신다면서, 방금 이 질문 보고 핸드폰 살짝 내려놓지 않으셨어요?" },
+  { q: "\"그냥 발길 닿는 대로\"라는 말을 들으면 속으로 살짝 불안하다.",
+    yes: "그 말 듣자마자 머릿속으로 화장실 위치, 주차장, 막차 시간 순서대로 떠오르셨죠?",
+    no: "안 불안하다면서, 인스타 저장 폴더에 \"가볼 곳\" 몇 개나 쌓여있는지는 세어보셨어요?" },
+  { q: "일정표에 없던 일이 생기면 \"오늘 하루 망했다\" 싶은 순간이 있었다.",
+    yes: "그 순간, 남은 일정 다시 짜려고 메모장부터 켜보신 적 있으시죠? 이미 새 계획 3줄 써놓으셨고요.",
+    no: "인생을 즉흥극으로 사신다면서 할 일 앱은 왜 아직 안 지우셨어요?" },
+  { q: "여행 갈 때 날씨 앱을 하루에 3번 이상 확인한다.",
+    yes: "날씨 앱 두 개 켜서 서로 비교해보신 적 있으시죠? 둘이 다르게 나오면 더 불안해지는데도요.",
+    no: "신경 안 쓴다면서, 오늘 아침 창밖은 한 번쯤 내다보셨잖아요." },
+  { q: "낯선 사람이 짠 계획에 그냥 따라가는 건, 상상만 해도 손발이 오그라든다.",
+    yes: "지금 이 문항 읽으면서 \"나라면 코스 이렇게 안 짤 텐데\" 생각하셨죠? 이미 짜고 계시네요.",
+    no: "저희 편이라면서, 오늘 이 부스 설문도 결국 남이 짠 질문지 따라가고 계신 거 아세요?" },
+  { q: "엑셀이나 노션으로 여행 일정표를 만들어본 적 있다.",
+    yes: "그 파일 이름, 혹시 \"여행_최종_진짜최종_찐최종.xlsx\" 아닌가요?",
+    no: "일정표 없이 당당하시다니, 근데 방금 그거 대답하면서 핸드폰 메모앱 켤 생각 하셨죠?" }
+];
+
+let current = 0;
+let answered = false;
+const tally = questions.map(() => ({ yes: 0, no: 0 }));
+let completions = 0;
+
+const progressEl = document.getElementById('progress');
+questions.forEach((_, i) => {
+  const seg = document.createElement('div');
+  seg.className = 'seg';
+  seg.id = 'seg' + i;
+  seg.innerHTML = '<i></i>';
+  progressEl.appendChild(seg);
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  current = 0;
+  showScreen('question');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const item = questions[current];
+  const accent = accents[current % accents.length];
+
+  document.getElementById('qnum').textContent = '심문 ' + (current + 1) + ' / ' + questions.length;
+  document.getElementById('qtext').textContent = item.q;
+
+  const yesBtn = document.getElementById('btnYes');
+  const noBtn = document.getElementById('btnNo');
+  yesBtn.className = 'choice-btn yes';
+  noBtn.className = 'choice-btn no';
+  yesBtn.disabled = false;
+  noBtn.disabled = false;
+  yesBtn.style.borderColor = 'rgba(255,255,255,0.25)';
+  noBtn.style.borderColor = 'rgba(255,255,255,0.25)';
+  yesBtn.style.background = 'rgba(255,255,255,0.04)';
+  noBtn.style.background = 'rgba(255,255,255,0.04)';
+
+  const reply = document.getElementById('reply');
+  reply.textContent = '';
+  reply.classList.remove('show');
+  reply.style.borderLeftColor = accent;
+
+  document.getElementById('btnNext').classList.remove('show');
+
+  questions.forEach((_, i) => {
+    const seg = document.getElementById('seg' + i);
+    const bar = seg.querySelector('i');
+    seg.classList.remove('current', 'done');
+    if (i < current) { seg.classList.add('done'); bar.style.background = accents[i % accents.length]; }
+    if (i === current) { seg.classList.add('current'); bar.style.background = accent; }
+  });
+}
+
+function pick(choice) {
+  if (answered) return;
+  answered = true;
+  tally[current][choice]++;
+
+  const item = questions[current];
+  const accent = accents[current % accents.length];
+  const btn = document.getElementById(choice === 'yes' ? 'btnYes' : 'btnNo');
+  document.getElementById('btnYes').disabled = true;
+  document.getElementById('btnNo').disabled = true;
+  btn.classList.add('picked');
+  btn.style.background = accent;
+  btn.style.borderColor = accent;
+
+  const reply = document.getElementById('reply');
+  reply.textContent = item[choice];
+  requestAnimationFrame(() => reply.classList.add('show'));
+
+  document.getElementById('btnNext').classList.add('show');
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    document.getElementById('seg' + (questions.length - 1)).classList.add('done');
+    showScreen('final');
+  } else {
+    renderQuestion();
+  }
+}
+
+function commit() {
+  completions++;
+  showScreen('done');
+}
+
+function restart() {
+  current = 0;
+  showScreen('intro');
+}
+
+function showAdmin() {
+  const body = document.getElementById('statsBody');
+  let html = '완료 인원: ' + completions + '명<br><br>';
+  questions.forEach((item, i) => {
+    html += (i + 1) + '. YES ' + tally[i].yes + ' · NO ' + tally[i].no + '<br>';
+  });
+  body.innerHTML = html;
+  document.getElementById('adminPanel').classList.add('show');
+}
+function hideAdmin() {
+  document.getElementById('adminPanel').classList.remove('show');
+}
+</script>
+
+</body>
+</html>
